@@ -590,9 +590,9 @@ jQuery(function ($) {
     //     document.getElementById('email-login-form').classList.add('d-none');
     // });
 
-   
-    
-    
+
+
+
     // document.getElementById('send-otp').addEventListener('click', function () {
     //     let mobileNumber = document.getElementById('mobile-number').value.trim();
     //     let errorMobile = document.getElementById('error-mobile');
@@ -607,7 +607,7 @@ jQuery(function ($) {
     //         return;
     //     }
 
-    //     errorMobile.innerText = ''; 
+    //     errorMobile.innerText = '';
     //     sendOTP(mobileNumber);
     //     document.getElementById('otp-section').classList.remove('d-none');
     // });
@@ -616,11 +616,11 @@ jQuery(function ($) {
 
     // function sendOTP(mobileNumber) {
     //     try {
-    //         const countryCode = '+91'; 
-    //         const fullMobileNumber = countryCode + mobileNumber; 
+    //         const countryCode = '+91';
+    //         const fullMobileNumber = countryCode + mobileNumber;
     //         generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-    //         const apiUrl = 'https://rest.qikberry.ai/v1/sms/messages'; 
-    //         const apiKey = '5c3876075d901cd1468c03949153b358'; 
+    //         const apiUrl = 'https://rest.qikberry.ai/v1/sms/messages';
+    //         const apiKey = '5c3876075d901cd1468c03949153b358';
     //         const otpMessage = `Dear Guest, Welcome Aboard! Your Travels2020.com login OTP is ${generatedOTP}. This OTP will be valid only for 10 mins. -Travels2020 Team`;
 
     //         fetch(apiUrl, {
@@ -660,7 +660,7 @@ jQuery(function ($) {
 
     // Verify OTP and Redirect to Homepage
     // document.getElementById('otp-login-form').addEventListener('submit', function (event) {
-    //     event.preventDefault(); 
+    //     event.preventDefault();
     //     let enteredOTP = document.getElementById('otp-input').value.trim();
     //     let otpError = document.getElementById('otp-error');
     //     let otpSuccess = document.getElementById('otp-success-mobile');
@@ -670,7 +670,7 @@ jQuery(function ($) {
     //         otpSuccess.innerText = 'OTP verified successfully! Redirecting...';
 
     //         setTimeout(() => {
-    //             window.location.href = '/'; 
+    //             window.location.href = '/';
     //         }, 2000);
     //     } else {
     //         otpError.innerText = 'Invalid OTP. Please try again.';
@@ -680,20 +680,20 @@ jQuery(function ($) {
     document.getElementById('send-otp').addEventListener('click', function () {
         let mobileNumber = document.getElementById('mobile-number').value.trim();
         let errorMobile = document.getElementById('error-mobile');
-        
+
         // Validate mobile number
         if (mobileNumber === '') {
             errorMobile.innerText = 'Please enter your mobile number.';
             return;
         }
-    
+
         if (!/^\d{10}$/.test(mobileNumber)) {
             errorMobile.innerText = 'Please enter a valid 10-digit mobile number.';
             return;
         }
-    
+
         errorMobile.innerText = ''; // Clear previous errors if valid
-    
+
         // Send OTP request
         fetch('/send-otp', {
             method: 'POST',
@@ -703,46 +703,46 @@ jQuery(function ($) {
             },
             body: JSON.stringify({ phone: mobileNumber })
         })
-        .then(response => {
-            if (!response.ok) {
-                // If the response isn't OK, throw an error with response status
-                return response.text().then(errorMessage => {
-                    throw new Error(`Error: ${errorMessage}`);
-                });
-            }
-            return response.json();  // Attempt to parse the response as JSON
-        })
-        .then(data => {
-            console.log(data, "OTP response");
-    
-            // Check for success or failure in the response
-            if (data.success) {
-                document.getElementById('otp-success-mobile').innerText = data.message;
-                document.getElementById('otp-section').classList.remove('d-none'); // Show OTP section
-            } else {
-                errorMobile.innerText = data.message;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            errorMobile.innerText = error.message || 'An error occurred while sending the OTP. Please try again later.';
-        });
+            .then(response => {
+                if (!response.ok) {
+                    // If the response isn't OK, throw an error with response status
+                    return response.text().then(errorMessage => {
+                        throw new Error(`Error: ${errorMessage}`);
+                    });
+                }
+                return response.json();  // Attempt to parse the response as JSON
+            })
+            .then(data => {
+                console.log(data, "OTP response");
+
+                // Check for success or failure in the response
+                if (data.success) {
+                    document.getElementById('otp-success-mobile').innerText = data.message;
+                    document.getElementById('otp-section').classList.remove('d-none'); // Show OTP section
+                } else {
+                    errorMobile.innerText = data.message;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                errorMobile.innerText = error.message || 'An error occurred while sending the OTP. Please try again later.';
+            });
     });
-    
-    
+
+
     $('.bravo-form-otplogin [type=submit]').click(function (e) {
         e.preventDefault(); // Prevent form submission
-    
+
         let form = $(this).closest('.bravo-form-otplogin');
         let phone = $('#mobile-number').val().trim();
         let otp = $('#otp-input').val().trim();
         let redirectUrl = '/'; // Default redirect URL
-    
+
         if (otp === '') {
             $('#otp-error').text('Please enter the OTP.');
             return;
         }
-    
+
         $.ajax({
             url: '/verify-otp', // Correct URL for OTP verification
             method: 'POST',
@@ -760,10 +760,10 @@ jQuery(function ($) {
             dataType: 'json',
             success: function (data) {
                 $('.icon-loading').hide(); // Hide loading icon after response
-    
+
                 if (data.success) {
                     $('#otp-success-mobile').text(data.message);
-    
+
                     // Redirect after OTP verification
                     setTimeout(function () {
                         window.location.href = data.redirect || redirectUrl; // Redirect URL after successful login
@@ -775,11 +775,11 @@ jQuery(function ($) {
             error: function (xhr) {
                 $('.icon-loading').hide(); // Hide loading icon if error
                 let errorMessage = xhr.responseJSON ? xhr.responseJSON.message : "An error occurred. Please try again.";
-                $('#otp-error').text(errorMessage); // Show error message
+                console.log(errorMessage);
             }
         });
     });
-    
+
 
     $('.bravo-form-register [type=submit]').click(function (e) {
         e.preventDefault();

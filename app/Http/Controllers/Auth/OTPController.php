@@ -13,79 +13,87 @@ class OTPController extends Controller
 {
     public function sendOTP(Request $request)
     {
-        // Validate the mobile number input
         $request->validate([
-            'phone' => 'required|numeric|digits:10|exists:users,phone',  // Ensure phone exists in the database
+            'phone' => 'required|numeric|digits:10',
         ]);
-    
-        // Find or create the user based on the phone number
+
+        // Check if the phone number exists in the database, if not, create a new user
         $user = User::where('phone', $request->phone)->first();
-    
+
         if (!$user) {
-            // If the user doesn't exist, create a new user
             $user = User::create([
                 'phone' => $request->phone,
-                'name' => 'Guest', // Default name for new user
+                'name' => 'Guest',
             ]);
         }
-    
-        // Generate a 6-digit OTP
+
+
         $otp = rand(100000, 999999);
-    
+
         // Save OTP and phone in the session for verification
         Session::put('otp', $otp);
         Session::put('phone', $request->phone);
-    
+
         // Call the SMS API to send OTP
         try {
             $smsSent = $this->sendSms($request->phone, $otp);
-    
+
             if ($smsSent) {
                 return response()->json(['success' => true, 'message' => 'OTP sent successfully!']);
             } else {
                 return response()->json(['success' => false, 'message' => 'Failed to send OTP. Please try again.'], 500);
             }
         } catch (\Exception $e) {
-            // Catch any error that occurred during SMS sending
             return response()->json(['success' => false, 'message' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
-    
+
     // Function to send SMS via an external API
     private function sendSms($phone, $otp)
     {
+
         $apiUrl = 'https://rest.qikberry.ai/v1/sms/messages';
-        $apiKey = '5c3876075d901cd1468c03949153b358'; // Replace with your actual API key
-    
+        $apiKey = '5c3876075d901cd1468c03949153b358';
+
         $message = "Dear Guest, Welcome Aboard! Your Travels2020.com login OTP is ${otp}. This OTP will be valid only for 10 mins. -Travels2020 Team";
-    
+
         $data = [
-            'to' => '+91' . $phone, // Ensure you prefix with country code
+            'to' => '+91' . $phone,
             'sender' => 'TR2020',
             'service' => 'SI',
             'template_id' => '1707173769422420228',
             'message' => $message,
         ];
-    
-        try {
+        // dd($data);
+
+        // try {
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer $apiKey"
-            ])->post($apiUrl, $data);
-    
-            // Check if the API request was successful
+            ])
+             ->withoutVerifying() // Disable SSL verification
+            ->post($apiUrl, $data);
+
+
             if ($response->successful()) {
                 return true;
             } else {
-                // Log or handle failed API response
-                return false;
-            }
-        } catch (\Exception $e) {
-            // Handle exceptions from HTTP request
+                // Log the error for debugging
+                \Log::error('SMS API Error', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
             return false;
-        }
+            }
+        // } catch (\Exception $e) {
+        //     // Log the exception for debugging
+        //     \Log::error('SMS API Exception', [
+        //         'message' => $e->getMessage(),
+        //         'trace' => $e->getTraceAsString(),
+        //     ]);
+        //     return false;
+        // }
     }
-    
 
     // Step 2: Verify OTP
     public function verifyOTP(Request $request)
@@ -93,7 +101,7 @@ class OTPController extends Controller
         // Validate the OTP input
         $request->validate([
             'otp' => 'required|digits:6',
-            'phone' => 'required|numeric|digits:10|exists:users,phone',  // Ensure phone exists in the database
+            'phone' => 'required|numeric|digits:10', // Ensure phone exists in the database
         ]);
 
         // Retrieve OTP and phone from session
